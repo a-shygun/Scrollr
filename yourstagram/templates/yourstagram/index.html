@@ -4,6 +4,7 @@
   {% include 'yourstagram/header.html' %}
 
   <main>
+    {% if sync_status == "done" %}<p class="sync-message">Sync finished. If your feed is empty, check the folder path and supported file types.</p>{% endif %}
     <section class="feed-heading">
       <div>
         <p class="eyebrow">YOUR LIBRARY</p>

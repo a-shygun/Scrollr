@@ -9,6 +9,10 @@ if (savedScroll !== null) {
 const feed = document.querySelector("#feed");
 const searchForm = document.querySelector("#search-form");
 const layoutSelect = document.querySelector("#layout-select");
+const syncDialog = document.querySelector("#sync-dialog");
+
+document.querySelector("#open-sync")?.addEventListener("click", () => syncDialog.showModal());
+document.querySelector("#close-sync")?.addEventListener("click", () => syncDialog.close());
 
 function updateSearchFilters(url) {
   const search = searchForm.querySelector('[name="q"]').value.trim();

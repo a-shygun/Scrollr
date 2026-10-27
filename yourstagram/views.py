@@ -1,11 +1,14 @@
 import hashlib
 
 from django.core.paginator import Paginator
+from django.core.management import call_command
+from django.conf import settings
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
+from pathlib import Path
 
 from yourstagram.models import Media
 
@@ -70,7 +73,32 @@ def index(request, category="", vote=""):
         "vote_filter": vote_filter,
         "type_filter": type_filter,
         "page_range": page_obj.paginator.get_elided_page_range(page_obj.number),
+        "can_choose_library": settings.DEBUG,
+        "library_path": str(current_library_path()),
+        "sync_status": request.GET.get("sync", ""),
     })
+
+
+def current_library_path():
+    if settings.LIBRARY_PATH_FILE.exists():
+        return Path(settings.LIBRARY_PATH_FILE.read_text().strip()).expanduser()
+    return settings.MEDIA_ROOT
+
+
+@require_POST
+def sync_library_view(request):
+    folder = request.POST.get("folder", "").strip()
+    if folder:
+        call_command("sync_library", folder)
+    return redirect("/?sync=done")
+
+
+def media_file(request, media_id):
+    media = get_object_or_404(Media, id=media_id)
+    file_path = current_library_path() / media.path
+    if not file_path.is_file():
+        raise Http404
+    return FileResponse(file_path.open("rb"))
 
 
 @require_POST

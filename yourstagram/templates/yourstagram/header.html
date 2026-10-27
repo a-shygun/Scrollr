@@ -81,4 +81,20 @@
       </select>
     </label>
   </form>
+  {% if can_choose_library %}
+    <button id="open-sync" class="sync-button" type="button" aria-label="Add a media folder">+</button>
+    <dialog id="sync-dialog" class="sync-dialog">
+      <form method="post" action="{% url 'sync_library' %}">
+        {% csrf_token %}
+        <h2>Add a media folder</h2>
+        <p>Enter the path to the folder containing your category folders and files.</p>
+        <label for="library-folder">Folder path</label>
+        <input id="library-folder" name="folder" type="text" value="{{ library_path }}" placeholder="/path/to/your/media" required>
+        <div class="sync-dialog-actions">
+          <button id="close-sync" type="button">Cancel</button>
+          <button type="submit">Sync library</button>
+        </div>
+      </form>
+    </dialog>
+  {% endif %}
 </header>

@@ -14,4 +14,5 @@ __pycache__/
 # Local settings and macOS files
 .env
 .env.*
+.library_path
 .DS_Store

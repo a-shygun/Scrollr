@@ -27,8 +27,9 @@ class Media(models.Model):
 
     @property
     def url(self):
-        url = "/media/" if settings.DEBUG else "/static/media/"
-        return url + quote(self.path, safe="/")
+        if settings.DEBUG:
+            return f"/media/{self.id}/"
+        return "/static/media/" + quote(self.path, safe="/")
 
     @property
     def type(self):
