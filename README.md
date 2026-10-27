@@ -29,16 +29,19 @@ python -m pip install -r requirements.txt
 python manage.py migrate
 ```
 
-On macOS with zsh, add an alias to `~/.zshrc`, replacing the path with where you cloned this project:
+To run `yourstagram` from the project folder without hard-coding its location, add this function to `~/.zshrc`:
 
 ```sh
-alias yourstagram='/path/to/Yourstagram/bin/yourstagram'
+yourstagram() {
+  "$PWD/bin/yourstagram"
+}
 ```
 
-Reload the shell settings and start the app:
+Reload the shell settings, go to the project folder, and start the app:
 
 ```sh
 source ~/.zshrc
+cd /path/to/Yourstagram
 yourstagram
 ```
 
