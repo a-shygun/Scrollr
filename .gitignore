@@ -1,0 +1,17 @@
+# Python environment and cache
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local database and collected static files
+*.sqlite3
+/var/static/*
+
+# Personal media library: keep only the empty folder in Git
+/data/*
+!/data/.gitkeep
+
+# Local settings and macOS files
+.env
+.env.*
+.DS_Store

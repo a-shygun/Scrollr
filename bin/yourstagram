@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+project_dir="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$project_dir" || exit 1
+source .venv/bin/activate
+
+(sleep 1 && open http://127.0.0.1:8080) >/dev/null 2>&1 &
+exec env DJANGO_DEBUG=true MEDIA_ROOT=data python -m gunicorn \
+  yourstagram.wsgi:application --workers 1 --bind 127.0.0.1:8080
