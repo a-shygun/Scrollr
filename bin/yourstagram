@@ -1,9 +1,28 @@
 #!/bin/zsh
+set -e
 
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$project_dir" || exit 1
 source .venv/bin/activate
 
-(sleep 1 && open http://127.0.0.1:8080) >/dev/null 2>&1 &
+start_port="${PORT:-8080}"
+port="$(.venv/bin/python -c '
+import socket
+import sys
+
+for port in range(int(sys.argv[1]), 65536):
+    with socket.socket() as server:
+        try:
+            server.bind(("127.0.0.1", port))
+        except OSError:
+            continue
+        print(port)
+        break
+else:
+    raise SystemExit("No available port found")
+' "$start_port")"
+
+echo "Starting Yourstagram at http://127.0.0.1:$port"
+(sleep 1 && open "http://127.0.0.1:$port") >/dev/null 2>&1 &
 exec env DJANGO_DEBUG=true python -m gunicorn \
-  yourstagram.wsgi:application --workers 1 --bind 127.0.0.1:8080
+  yourstagram.wsgi:application --workers 1 --bind "127.0.0.1:$port"

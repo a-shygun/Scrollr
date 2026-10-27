@@ -27,12 +27,22 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 python manage.py migrate
-DJANGO_DEBUG=true python manage.py runserver 127.0.0.1:8080
 ```
 
-Open <http://localhost:8080>, click **+**, and enter your media folder path. Click **Sync library** after adding or removing files to refresh the list.
+On macOS with zsh, add an alias to `~/.zshrc`, replacing the path with where you cloned this project:
 
-On Ryan's Mac, the `yourstagram` shell command activates the virtual environment, starts Gunicorn, and opens the site in a browser.
+```sh
+alias yourstagram='/path/to/Yourstagram/bin/yourstagram'
+```
+
+Reload the shell settings and start the app:
+
+```sh
+source ~/.zshrc
+yourstagram
+```
+
+The launcher starts Gunicorn and opens the app in a browser. It checks port 8080 first, then tries the next port until it finds one available. You can set `PORT` to choose a different starting port. In the app, click **+** and enter your media folder path. Click **Sync library** after adding or removing files to refresh the list.
 
 ## Deploy on Render
 
