@@ -21,9 +21,11 @@
       autocomplete="off"
     />
     <button class="search-button" type="submit">Search</button>
+  </form>
 
+  <nav class="nav-tools" aria-label="Media browsing controls">
     <label class="category-wrap layout-filter">
-      <span class="sr-only">Choose columns</span>
+      <span class="filter-label">View</span>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="4" y="4" width="4" height="16" rx="1" />
         <rect x="10" y="4" width="4" height="16" rx="1" />
@@ -37,7 +39,7 @@
     </label>
 
     <label class="category-wrap category-filter">
-      <span class="sr-only">Filter by category</span>
+      <span class="filter-label">Category</span>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 6.5h7l2 2h9v10H3z" />
       </svg>
@@ -51,7 +53,7 @@
     </label>
 
     <label class="category-wrap vote-filter">
-      <span class="sr-only">Filter by your votes</span>
+      <span class="filter-label">Votes</span>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3Zm0 0 4-7a3 3 0 0 1 2 3v4h5a2 2 0 0 1 2 2l-1.3 6a2 2 0 0 1-2 2H7" />
       </svg>
@@ -64,23 +66,25 @@
       </select>
     </label>
 
-    <label class="category-wrap media-filter">
-      <span class="sr-only">Filter by media type</span>
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="8.5" cy="9" r="1.5" />
-        <path d="m21 15-5-5L5 20" />
-      </svg>
-      <select name="type" aria-label="Filter by media type">
-        <option value="all"{% if type_filter == 'all' %} selected{% endif %}>All types</option>
-        {% for option in type_options %}
-          <option value="{{ option.value }}"{% if type_filter == option.value %} selected{% endif %}>
-            {{ option.name }}
-          </option>
-        {% endfor %}
-      </select>
-    </label>
-  </form>
+    {% if show_type_filter %}
+      <label class="category-wrap media-filter">
+        <span class="filter-label">Media</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="8.5" cy="9" r="1.5" />
+          <path d="m21 15-5-5L5 20" />
+        </svg>
+        <select name="type" aria-label="Filter by media type">
+          <option value="all"{% if type_filter == 'all' %} selected{% endif %}>All types</option>
+          {% for option in type_options %}
+            <option value="{{ option.value }}"{% if type_filter == option.value %} selected{% endif %}>
+              {{ option.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+    {% endif %}
+  </nav>
   {% if can_choose_library %}
     <button id="open-sync" class="sync-button" type="button" aria-label="Add a media folder">+</button>
     <dialog id="sync-dialog" class="sync-dialog">

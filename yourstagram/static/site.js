@@ -62,7 +62,7 @@ if (searchForm) {
     });
   });
 
-  searchForm.querySelector('[name="type"]').addEventListener("change", () => {
+  searchForm.querySelector('[name="type"]')?.addEventListener("change", () => {
     const url = new URL(window.location.href);
     updateSearchFilters(url);
     window.location.assign(url);

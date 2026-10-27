@@ -57,7 +57,7 @@ if os.environ.get("MEDIA_ROOT"):
 elif LIBRARY_PATH_FILE.exists():
     MEDIA_ROOT = Path(LIBRARY_PATH_FILE.read_text().strip()).expanduser()
 else:
-    MEDIA_ROOT = BASE_DIR / "data"
+    MEDIA_ROOT = BASE_DIR / "demo_media"
 STATICFILES_DIRS = [("media", BASE_DIR / "demo_media")]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

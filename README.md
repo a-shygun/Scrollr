@@ -16,6 +16,8 @@ data/
 
 Yourstagram indexes `.mp4`, `.m4v`, `.webm`, `.mov`, `.mkv`, `.avi`, `.gif`, `.jpg`, `.jpeg`, `.png`, and `.webp` files. The app remembers the folder path on this computer. Your media and folder path are not added to GitHub; you do not need to move your files into the project.
 
+If no library folder has been imported, Yourstagram automatically uses the sample files in `demo_media/`. The media-type filter only appears when at least two supported media types are available.
+
 To show a few files on Render, put only files you are comfortable publishing in `demo_media/`. That folder is included in the GitHub project and used only for the online demo. The personal downloader and any link lists are separate from this app.
 
 ## Run locally

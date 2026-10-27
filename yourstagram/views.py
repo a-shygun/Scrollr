@@ -14,6 +14,24 @@ from yourstagram.models import Media
 
 
 def index(request, category="", vote=""):
+    if not Media.objects.exists() and settings.MEDIA_ROOT.is_dir():
+        call_command("sync_library", str(settings.MEDIA_ROOT))
+
+    available_media_types = set(
+        Media.objects.order_by().values_list("media_type", flat=True).distinct()
+    )
+    media_type_labels = (
+        ("video", "videos", "Videos"),
+        ("photo", "photos", "Photos"),
+        ("gif", "gifs", "GIFs"),
+    )
+    type_options = [
+        {"name": label, "value": value}
+        for media_type, value, label in media_type_labels
+        if media_type in available_media_types
+    ]
+    show_type_filter = len(type_options) > 1
+
     categories = list(
         Media.objects.order_by().values_list("category", flat=True)
         .distinct().order_by("category")
@@ -24,6 +42,8 @@ def index(request, category="", vote=""):
 
     vote_filter = vote or "all"
     type_filter = request.GET.get("type", "all")
+    if type_filter not in {option["value"] for option in type_options}:
+        type_filter = "all"
     query = request.GET.get("q", "").strip()
 
     media = Media.objects.all()
@@ -34,7 +54,7 @@ def index(request, category="", vote=""):
     else:
         media = media.filter(vote_choice=vote_filter)
 
-    media_types = {"videos": "video", "photos": "photo", "gifs": "gif"}
+    media_types = {value: media_type for media_type, value, _ in media_type_labels}
     if type_filter in media_types:
         media = media.filter(media_type=media_types[type_filter])
     if query:
@@ -58,15 +78,12 @@ def index(request, category="", vote=""):
         {"name": choice.title(), "value": choice, "url": f"/{category_path}/{choice}/"}
         for choice in ("like", "dislike")
     ]
-    type_options = [{"name": name, "value": value} for value, name in (
-        ("videos", "Videos"), ("photos", "Photos"), ("gifs", "GIFs")
-    )]
-
     return render(request, "yourstagram/index.html", {
         "page_obj": page_obj,
         "category_options": category_options,
         "vote_options": vote_options,
         "type_options": type_options,
+        "show_type_filter": show_type_filter,
         "query": query,
         "selected_category": category_name,
         "selected_vote": vote_filter,
