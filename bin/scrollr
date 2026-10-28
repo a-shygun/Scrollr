@@ -40,14 +40,16 @@ else:
     raise SystemExit("No available port found")
 ' "$start_port")"
 
+env DJANGO_DEBUG=true python manage.py sync_library
+
 allowed_hosts="${ALLOWED_HOSTS:-localhost,127.0.0.1}"
 if [[ -n "$lan_ip" ]]; then
   allowed_hosts="$allowed_hosts,$lan_ip"
-  echo "Starting Yourstagram at http://127.0.0.1:$port and http://$lan_ip:$port"
+  echo "Starting Scrollr at http://127.0.0.1:$port and http://$lan_ip:$port"
 else
-  echo "Starting Yourstagram at http://127.0.0.1:$port"
+  echo "Starting Scrollr at http://127.0.0.1:$port"
   echo "Could not determine a LAN IP address."
 fi
 (sleep 1 && open "http://127.0.0.1:$port") >/dev/null 2>&1 &
 exec env DJANGO_DEBUG=true ALLOWED_HOSTS="$allowed_hosts" python -m gunicorn \
-  yourstagram.wsgi:application --workers 1 --bind "0.0.0.0:$port"
+  scrollr.wsgi:application --workers 1 --bind "0.0.0.0:$port"

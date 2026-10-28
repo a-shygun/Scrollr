@@ -1,0 +1,32 @@
+{% extends 'scrollr/base.html' %}
+
+{% block content %}
+  {% include 'scrollr/header.html' %}
+
+  <main>
+    <section class="feed-heading">
+      <div>
+        <p class="eyebrow">YOUR LIBRARY</p>
+        <h1>Your Media</h1>
+      </div>
+      <p class="result-count">{{ page_obj.paginator.count }} posts</p>
+    </section>
+
+    <section id="feed-root" class="feed mosaic-feed" data-next-page="{% if page_obj.has_next %}?category={{ selected_category_slug }}&amp;vote={{ selected_vote }}&amp;q={{ query|urlencode }}&amp;page={{ page_obj.next_page_number }}{% endif %}" aria-label="Media">
+      {% for item in page_obj %}
+        {% include 'scrollr/media_card.html' with item=item %}
+      {% endfor %}
+    </section>
+
+    {% if not page_obj.object_list %}
+      <div class="empty-state">
+        <h2>No media found</h2>
+        <p>Try another search or category.</p>
+      </div>
+    {% endif %}
+
+    {% if page_obj.paginator.num_pages > 1 %}{% include 'scrollr/pagination.html' %}{% endif %}
+    <footer>Your personal media library.</footer>
+  </main>
+
+{% endblock %}

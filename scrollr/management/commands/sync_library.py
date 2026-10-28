@@ -1,8 +1,6 @@
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from pathlib import Path
-
-from yourstagram.models import Media
+from scrollr.models import Media
+from scrollr.views import get_library_root
 
 
 VIDEO_EXTENSIONS = (".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi")
@@ -10,13 +8,10 @@ PHOTO_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 
 
 class Command(BaseCommand):
-    help = "Update the Media table from the media folder."
-
-    def add_arguments(self, parser):
-        parser.add_argument("folder", nargs="?", help="Folder containing category folders and media files")
+    help = "Update the media index from the active library folder."
 
     def handle(self, *args, **options):
-        media_folder = Path(options["folder"] or settings.MEDIA_ROOT).expanduser().resolve()
+        media_folder = get_library_root()
         if not media_folder.exists():
             self.stdout.write(f"The media folder was not found: {media_folder}")
             return
@@ -30,34 +25,32 @@ class Command(BaseCommand):
 
             extension = file_path.suffix.lower()
             if extension in VIDEO_EXTENSIONS:
-                media_type = "video"
+                is_video = True
             elif extension == ".gif":
-                media_type = "gif"
+                is_video = False
             elif extension in PHOTO_EXTENSIONS:
-                media_type = "photo"
+                is_video = False
             else:
                 continue
 
             relative_path = file_path.relative_to(media_folder).as_posix()
-            media_files.append((file_path, relative_path, media_type))
+            relative_category = file_path.parent.relative_to(media_folder)
+            category = relative_category.parts[0] if relative_category.parts else "General"
+            media_files.append((file_path, relative_path, is_video, category))
 
-        if not media_files:
-            self.stdout.write("No supported media files found.")
-            return
-
-        if options["folder"] and hasattr(settings, "LIBRARY_PATH_FILE"):
-            settings.LIBRARY_PATH_FILE.write_text(str(media_folder))
-
-        for file_path, relative_path, media_type in media_files:
+        for file_path, relative_path, is_video, category in media_files:
             found_paths.append(relative_path)
             Media.objects.update_or_create(
                 path=relative_path,
                 defaults={
                     "title": file_path.stem[:512],
-                    "category": file_path.parent.name[:255],
-                    "media_type": media_type,
+                    "category": category[:255],
+                    "is_vid": is_video,
                 },
             )
 
-        Media.objects.exclude(path__in=found_paths).delete()
+        if found_paths:
+            Media.objects.exclude(path__in=found_paths).delete()
+        else:
+            Media.objects.all().delete()
         self.stdout.write(f"Synced {len(found_paths)} media files from {media_folder}.")

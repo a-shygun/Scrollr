@@ -2,31 +2,33 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "yourstagram-local-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "scrollr-local-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS", "localhost,127.0.0.1,yourstagram.amirshygun.ir"
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,scrollr.amirshygun.ir"
 ).split(",")
 if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
+    "django.contrib.messages",
     "django.contrib.sessions",
     "django.contrib.staticfiles",
-    "yourstagram.apps.YourstagramConfig",
+    "scrollr.apps.ScrollrConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
 ]
 
-ROOT_URLCONF = "yourstagram.urls"
-WSGI_APPLICATION = "yourstagram.wsgi.application"
+ROOT_URLCONF = "scrollr.urls"
+WSGI_APPLICATION = "scrollr.wsgi.application"
 
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -35,6 +37,7 @@ TEMPLATES = [{
     "OPTIONS": {"context_processors": [
         "django.template.context_processors.request",
         "django.template.context_processors.csrf",
+        "django.contrib.messages.context_processors.messages",
     ]},
 }]
 
@@ -51,16 +54,9 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "var" / "static"
 MEDIA_URL = "/media/"
+DATA_ROOT = BASE_DIR / "data"
 LIBRARY_PATH_FILE = BASE_DIR / ".library_path"
-if os.environ.get("MEDIA_ROOT"):
-    MEDIA_ROOT = Path(os.environ["MEDIA_ROOT"]).expanduser()
-    if not MEDIA_ROOT.is_absolute():
-        MEDIA_ROOT = BASE_DIR / MEDIA_ROOT
-elif LIBRARY_PATH_FILE.exists():
-    MEDIA_ROOT = Path(LIBRARY_PATH_FILE.read_text().strip()).expanduser()
-else:
-    MEDIA_ROOT = BASE_DIR / "demo_media"
-STATICFILES_DIRS = [("media", BASE_DIR / "demo_media")]
+MEDIA_ROOT = DATA_ROOT
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},

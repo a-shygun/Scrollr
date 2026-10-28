@@ -7,12 +7,27 @@ __pycache__/
 *.sqlite3
 /var/static/*
 
-# Personal media library: keep only the empty folder in Git
+# Keep the included library visible to Git; ignore additional local media files.
 /data/*
 !/data/.gitkeep
+!/data/Video by archi.best.mp4
+!/data/Video by explorer_von.mp4
+!/data/Video by harvon.x.mp4
+!/data/Video by jmjgrows.mp4
+!/data/Video by khwaja_hasnain.mp4
+!/data/Video by lazyset_up.mp4
+!/data/Video by megaamerican.mp4
+!/data/Video by miniatur.landscape.mp4
+!/data/Video by murlovik.mp4
+!/data/Video by peaktylerr.mp4
+!/data/Video by petaluxe5.mp4
+!/data/Video by serenvaleworld.mp4
+!/data/Video by stormlenss.mp4
+!/data/Video by tamas.trvl.mp4
 
 # Local settings and macOS files
 .env
 .env.*
 .library_path
+.library_path.tmp
 .DS_Store
