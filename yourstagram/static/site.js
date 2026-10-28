@@ -11,12 +11,22 @@ const searchForm = document.querySelector("#search-form");
 const layoutSelect = document.querySelector("#layout-select");
 const syncDialog = document.querySelector("#sync-dialog");
 
+if (document.querySelector(".sync-message")) {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("sync") === "done") {
+    url.searchParams.delete("sync");
+    window.history.replaceState(window.history.state, "", url);
+  }
+}
+
 document.querySelector("#open-sync")?.addEventListener("click", () => syncDialog.showModal());
 document.querySelector("#close-sync")?.addEventListener("click", () => syncDialog.close());
 
 function updateSearchFilters(url) {
-  const search = searchForm.querySelector('[name="q"]').value.trim();
-  const type = searchForm.querySelector('[name="type"]').value;
+  const searchInput = searchForm?.querySelector('[name="q"]');
+  const typeSelect = document.querySelector('.nav-tools [name="type"]');
+  const search = searchInput ? searchInput.value.trim() : url.searchParams.get("q") || "";
+  const type = typeSelect?.value || url.searchParams.get("type") || "all";
 
   if (search) {
     url.searchParams.set("q", search);
@@ -29,6 +39,8 @@ function updateSearchFilters(url) {
   } else {
     url.searchParams.set("type", type);
   }
+
+  url.searchParams.delete("page");
 }
 
 function setLayout(layout) {
@@ -54,7 +66,7 @@ if (searchForm) {
     window.location.assign(url);
   });
 
-  searchForm.querySelectorAll("[data-route-filter]").forEach(select => {
+  document.querySelectorAll("[data-route-filter]").forEach(select => {
     select.addEventListener("change", () => {
       const url = new URL(select.value, window.location.href);
       updateSearchFilters(url);
@@ -62,7 +74,7 @@ if (searchForm) {
     });
   });
 
-  searchForm.querySelector('[name="type"]')?.addEventListener("change", () => {
+  document.querySelector('.nav-tools [name="type"]')?.addEventListener("change", () => {
     const url = new URL(window.location.href);
     updateSearchFilters(url);
     window.location.assign(url);
