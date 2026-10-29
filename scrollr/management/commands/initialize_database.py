@@ -9,7 +9,7 @@ class Command(BaseCommand):
         call_command(
             "migrate",
             run_syncdb=True,
-            interactive=options["interactive"],
+            interactive=False,
             verbosity=options["verbosity"],
         )
         self._import_legacy_media()
