@@ -22,7 +22,8 @@ else:
     raise SystemExit(f"No available port at or above {start_port}")
 ' "${PORT:-8080}")"
 
-env DJANGO_DEBUG=true .venv/bin/python manage.py migrate --noinput
+env DJANGO_DEBUG=true .venv/bin/python manage.py initialize_database --noinput
+env DJANGO_DEBUG=true .venv/bin/python manage.py sync_library
 
 allowed_hosts="${ALLOWED_HOSTS:-localhost,127.0.0.1}"
 if [[ -n "$lan_ip" ]]; then
