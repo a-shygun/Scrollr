@@ -1,5 +1,4 @@
 import hashlib
-import ipaddress
 import mimetypes
 import os
 from pathlib import Path
@@ -9,7 +8,7 @@ from django.core.management import call_command
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
-from django.http import FileResponse, Http404, HttpResponse, StreamingHttpResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.text import slugify
@@ -18,29 +17,17 @@ from django.views.decorators.http import require_POST
 from scrollr.models import Media
 
 
-def get_custom_library_root():
-    if not settings.DEBUG:
-        return None
-    try:
-        configured_path = settings.LIBRARY_PATH_FILE.read_text().strip()
-        if configured_path:
-            library_root = Path(configured_path).expanduser().resolve(strict=True)
-            if library_root.is_dir() and os.access(library_root, os.R_OK | os.X_OK):
-                return library_root
-    except (OSError, RuntimeError, ValueError):
-        pass
-    return None
-
-
 def get_library_root():
-    return get_custom_library_root() or settings.DATA_ROOT.resolve()
-
-
-def is_local_request(request):
-    try:
-        return ipaddress.ip_address(request.META.get("REMOTE_ADDR", "")).is_loopback
-    except ValueError:
-        return False
+    if settings.DEBUG:
+        try:
+            configured_path = (Path(__file__).resolve().parents[1] / ".library_path").read_text().strip()
+            if configured_path:
+                library_root = Path(configured_path).expanduser().resolve(strict=True)
+                if library_root.is_dir() and os.access(library_root, os.R_OK | os.X_OK):
+                    return library_root
+        except (OSError, RuntimeError, ValueError):
+            pass
+    return settings.DATA_ROOT.resolve()
 
 
 def local_return_url(request):
@@ -50,22 +37,9 @@ def local_return_url(request):
     return target
 
 
-def _category_options(categories):
-    return [{"name": "All categories", "value": "all"}] + [
-        {"name": name, "value": slugify(name)} for name in categories
-    ]
-
-
-def _vote_options():
-    return [{"name": "All votes", "value": "all"}] + [
-        {"name": choice.title(), "value": choice} for choice in ("like", "dislike")
-    ]
-
-
 def index(request, category="", vote=""):
     library_root = get_library_root()
-    if not Media.objects.exists() and library_root.is_dir():
-        call_command("sync_library")
+    local_library_enabled = settings.DEBUG and request.META.get("REMOTE_ADDR") in {"127.0.0.1", "::1"}
 
     categories = list(
         Media.objects.order_by().values_list("category", flat=True)
@@ -96,18 +70,21 @@ def index(request, category="", vote=""):
         f"1000:{item.path}".encode(), digest_size=8
     ).digest())
     page_obj = Paginator(media, 100).get_page(request.GET.get("page"))
-
     return render(request, "scrollr/index.html", {
         "page_obj": page_obj,
-        "category_options": _category_options(categories),
-        "vote_options": _vote_options(),
+        "category_options": [{"name": "All categories", "value": "all"}] + [
+            {"name": name, "value": slugify(name)} for name in categories
+        ],
+        "vote_options": [{"name": "All votes", "value": "all"}] + [
+            {"name": choice.title(), "value": choice} for choice in ("like", "dislike")
+        ],
         "query": query,
         "selected_category": category_name,
         "selected_category_slug": slugify(category_name) if category_name else "all",
         "selected_vote": vote_filter,
         "return_url": request.get_full_path(),
-        "local_library_enabled": settings.DEBUG and is_local_request(request),
-        "custom_library_path": str(get_custom_library_root() or ""),
+        "local_library_enabled": local_library_enabled,
+        "custom_library_path": str(library_root) if library_root != settings.DATA_ROOT.resolve() else "",
         "page_range": page_obj.paginator.get_elided_page_range(page_obj.number),
     })
 
@@ -115,10 +92,10 @@ def index(request, category="", vote=""):
 def _parse_byte_range(value, size):
     """Return an inclusive (start, end) range, or None for invalid requests."""
     try:
-        unit, value = value.split("=", 1)
-        if unit.strip() != "bytes" or "," in value:
+        unit, range_spec = value.strip().split("=", 1)
+        if unit.strip() != "bytes" or "," in range_spec:
             return None
-        first, last = value.strip().split("-", 1)
+        first, last = range_spec.strip().split("-", 1)
         if first:
             start = int(first)
             end = min(int(last), size - 1) if last else size - 1
@@ -186,8 +163,12 @@ def cast_vote(request, media_id):
     if choice in ("like", "dislike"):
         media.vote_choice = choice
         media.save(update_fields=["vote_choice"])
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"choice": choice})
         messages.success(request, "Saved to liked posts" if choice == "like" else "Hidden from your feed")
     else:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"error": "Invalid vote"}, status=400)
         messages.error(request, "That vote could not be saved.")
 
     return redirect(local_return_url(request))
@@ -195,24 +176,19 @@ def cast_vote(request, media_id):
 
 @require_POST
 def set_library_path(request):
-    if not settings.DEBUG or not is_local_request(request):
+    if not settings.DEBUG or request.META.get("REMOTE_ADDR") not in {"127.0.0.1", "::1"}:
         raise Http404
 
     selected_path = request.POST.get("path", "").strip()
-    config_file = settings.LIBRARY_PATH_FILE
+    config_file = Path(__file__).resolve().parents[1] / ".library_path"
     if selected_path:
         try:
             library_root = Path(selected_path).expanduser().resolve(strict=True)
         except (OSError, RuntimeError, ValueError):
-            messages.error(request, "That folder could not be found.")
-            return redirect(local_return_url(request))
-        if not library_root.is_dir() or not os.access(library_root, os.R_OK | os.X_OK):
-            messages.error(request, "Choose a readable folder.")
+            messages.error(request, "Try again.")
             return redirect(local_return_url(request))
 
-        temporary_file = config_file.with_suffix(".tmp")
-        temporary_file.write_text(str(library_root))
-        temporary_file.replace(config_file)
+        config_file.write_text(str(library_root))
         success_message = f"Using local media folder: {library_root}"
     else:
         config_file.unlink(missing_ok=True)

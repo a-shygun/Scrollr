@@ -7,6 +7,11 @@ __pycache__/
 *.sqlite3
 /var/static/*
 
+# Keep the baseline schema migration; ignore newly generated migrations.
+/scrollr/migrations/*.py
+!/scrollr/migrations/__init__.py
+!/scrollr/migrations/0001_initial.py
+
 # Keep the included library visible to Git; ignore additional local media files.
 /data/*
 !/data/.gitkeep

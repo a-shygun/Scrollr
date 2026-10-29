@@ -1,10 +1,12 @@
 from django.core.management.base import BaseCommand
+
 from scrollr.models import Media
 from scrollr.views import get_library_root
 
 
 VIDEO_EXTENSIONS = (".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi")
 PHOTO_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+SUPPORTED_EXTENSIONS = VIDEO_EXTENSIONS + PHOTO_EXTENSIONS + (".gif",)
 
 
 class Command(BaseCommand):
@@ -17,35 +19,24 @@ class Command(BaseCommand):
             return
 
         found_paths = []
-
-        media_files = []
         for file_path in media_folder.rglob("*"):
             if not file_path.is_file():
                 continue
 
             extension = file_path.suffix.lower()
-            if extension in VIDEO_EXTENSIONS:
-                is_video = True
-            elif extension == ".gif":
-                is_video = False
-            elif extension in PHOTO_EXTENSIONS:
-                is_video = False
-            else:
+            if extension not in SUPPORTED_EXTENSIONS:
                 continue
 
             relative_path = file_path.relative_to(media_folder).as_posix()
             relative_category = file_path.parent.relative_to(media_folder)
             category = relative_category.parts[0] if relative_category.parts else "General"
-            media_files.append((file_path, relative_path, is_video, category))
-
-        for file_path, relative_path, is_video, category in media_files:
             found_paths.append(relative_path)
             Media.objects.update_or_create(
                 path=relative_path,
                 defaults={
                     "title": file_path.stem[:512],
                     "category": category[:255],
-                    "is_vid": is_video,
+                    "is_vid": extension in VIDEO_EXTENSIONS,
                 },
             )
 

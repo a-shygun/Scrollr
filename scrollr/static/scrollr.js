@@ -10,35 +10,23 @@
   if (!feed) return;
 
   let layout = localStorage.getItem("scrollr-layout") || "mosaic";
+  if (layout === "single") layout = "column";
   let videoObserver;
   let pageObserver;
 
-  function updateLayout(next, selectedPost) {
+  function updateLayout(next) {
     layout = next;
     localStorage.setItem("scrollr-layout", layout);
     feed.className = `feed ${layout}-feed`;
-    document.body.classList.toggle("single-mode", layout === "single");
     document.querySelectorAll("[data-layout]").forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.layout === layout));
     });
-    if (layout === "single") {
-      const posts = [...feed.querySelectorAll(".clip-card")];
-      const index = selectedPost ? Math.max(posts.indexOf(selectedPost), 0) : 0;
-      feed.scrollTo({ top: Math.max(index, 0) * feed.clientHeight, behavior: "auto" });
-    }
     observeFeed();
-  }
-
-  function openPost(post) {
-    if (layout === "single") return;
-    localStorage.setItem("scrollr-return-layout", layout);
-    updateLayout("single", post);
   }
 
   function observeFeed() {
     videoObserver?.disconnect();
     pageObserver?.disconnect();
-
     videoObserver = new IntersectionObserver(entries => entries.forEach(({ target, isIntersecting, intersectionRatio }) => {
       if (isIntersecting && intersectionRatio >= 0.35) {
         target.muted = true;
@@ -48,50 +36,64 @@
     feed.querySelectorAll("video").forEach(video => videoObserver.observe(video));
 
     const lastPost = feed.lastElementChild;
-    if (layout === "single" && feed.dataset.nextPage && lastPost) {
-      pageObserver = new IntersectionObserver(entries => {
-        if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.65)) {
-          pageObserver.disconnect();
-          window.location.assign(new URL(feed.dataset.nextPage, window.location.href));
+    if (feed.dataset.nextPage && lastPost) {
+      pageObserver = new IntersectionObserver(async ([entry]) => {
+        if (!entry.isIntersecting) return;
+        pageObserver.disconnect();
+        try {
+          const response = await fetch(feed.dataset.nextPage);
+          if (!response.ok) throw new Error("Could not load more posts");
+          const page = new DOMParser().parseFromString(await response.text(), "text/html");
+          const nextFeed = page.querySelector("#feed-root");
+          if (!nextFeed) return;
+          feed.append(...nextFeed.querySelectorAll(".clip-card"));
+          feed.dataset.nextPage = nextFeed.dataset.nextPage;
+          observeFeed();
+        } catch {
+          pageObserver.observe(lastPost);
         }
-      }, { root: feed, threshold: [0.65] });
+      }, { rootMargin: "300px" });
       pageObserver.observe(lastPost);
     }
-
   }
 
   document.querySelectorAll("[data-layout]").forEach(button => button.addEventListener("click", () => updateLayout(button.dataset.layout)));
 
-  feed.addEventListener("submit", event => {
-    if (!event.target.closest(".vote-form")) return;
-    sessionStorage.setItem("scrollr-vote-scroll", JSON.stringify({
-      layout,
-      windowY: window.scrollY,
-      feedY: feed.scrollTop,
-    }));
-  });
-
-  feed.addEventListener("click", event => {
-    const target = event.target;
-    const post = target.closest(".clip-card");
-    if (!post) return;
-    if (target.closest(".single-grid")) return updateLayout(localStorage.getItem("scrollr-return-layout") || "mosaic");
-    if (target.closest(".vote-form")) return;
-    const video = target.closest("video");
-    if (video && layout === "single") {
-      video.muted = !video.muted;
-      video.play().catch(() => { });
-      post.classList.toggle("is-muted", video.muted);
-      return;
-    }
-    if (target.closest(".video-frame")) openPost(post);
-  });
-
-  feed.addEventListener("keydown", event => {
-    if (!event.target.matches(".card-caption") || !["Enter", " "].includes(event.key)) return;
+  feed.addEventListener("submit", async event => {
+    const form = event.target.closest(".vote-form");
+    if (!form) return;
     event.preventDefault();
-    openPost(event.target.closest(".clip-card"));
+
+    const button = form.querySelector("button");
+    button.disabled = true;
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      if (!response.ok) throw new Error("Vote failed");
+
+      const { choice } = await response.json();
+      const post = form.closest(".clip-card");
+      post.querySelectorAll(".vote-action").forEach(voteButton => {
+        const active = voteButton.dataset.vote === choice;
+        voteButton.classList.toggle("is-active", active);
+        voteButton.setAttribute("aria-pressed", String(active));
+      });
+
+      const voteFilter = feed.dataset.voteFilter;
+      if ((voteFilter === "all" && choice === "dislike") || (voteFilter !== "all" && voteFilter !== choice)) {
+        post.remove();
+        observeFeed();
+      } else {
+        button.disabled = false;
+      }
+    } catch {
+      button.disabled = false;
+    }
   });
+
   const searchDialog = document.querySelector("#search-dialog");
   const libraryDialog = document.querySelector("#library-dialog");
   document.querySelector("#library-toggle")?.addEventListener("click", () => libraryDialog?.showModal());
@@ -102,15 +104,4 @@
 
   updateLayout(layout);
 
-  const savedScroll = sessionStorage.getItem("scrollr-vote-scroll");
-  if (savedScroll) {
-    sessionStorage.removeItem("scrollr-vote-scroll");
-    try {
-      const position = JSON.parse(savedScroll);
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (position.layout === "single") feed.scrollTop = position.feedY;
-        else window.scrollTo(0, position.windowY);
-      }));
-    } catch { }
-  }
 })();

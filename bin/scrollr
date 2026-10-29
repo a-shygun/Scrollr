@@ -3,32 +3,14 @@ set -e
 
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$project_dir" || exit 1
-source .venv/bin/activate
 
-lan_ip=""
-for interface in en0 en1; do
-  lan_ip="$(/usr/sbin/ipconfig getifaddr "$interface" 2>/dev/null || true)"
-  [[ -n "$lan_ip" ]] && break
-done
-if [[ -z "$lan_ip" ]]; then
-  lan_ip="$(.venv/bin/python -c '
-import socket
-
-try:
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
-        probe.connect(("192.0.2.1", 80))
-        print(probe.getsockname()[0])
-except OSError:
-    print("")
-')"
-fi
-
-start_port="${PORT:-8080}"
+lan_ip="$(/usr/sbin/ipconfig getifaddr en0 2>/dev/null || /usr/sbin/ipconfig getifaddr en1 2>/dev/null || true)"
 port="$(.venv/bin/python -c '
 import socket
 import sys
 
-for port in range(int(sys.argv[1]), 65536):
+start_port = int(sys.argv[1])
+for port in range(start_port, 65536):
     with socket.socket() as server:
         try:
             server.bind(("0.0.0.0", port))
@@ -37,10 +19,10 @@ for port in range(int(sys.argv[1]), 65536):
         print(port)
         break
 else:
-    raise SystemExit("No available port found")
-' "$start_port")"
+    raise SystemExit(f"No available port at or above {start_port}")
+' "${PORT:-8080}")"
 
-env DJANGO_DEBUG=true python manage.py sync_library
+env DJANGO_DEBUG=true .venv/bin/python manage.py migrate --noinput
 
 allowed_hosts="${ALLOWED_HOSTS:-localhost,127.0.0.1}"
 if [[ -n "$lan_ip" ]]; then
@@ -51,5 +33,5 @@ else
   echo "Could not determine a LAN IP address."
 fi
 (sleep 1 && open "http://127.0.0.1:$port") >/dev/null 2>&1 &
-exec env DJANGO_DEBUG=true ALLOWED_HOSTS="$allowed_hosts" python -m gunicorn \
+exec env DJANGO_DEBUG=true ALLOWED_HOSTS="$allowed_hosts" .venv/bin/python -m gunicorn \
   scrollr.wsgi:application --workers 1 --bind "0.0.0.0:$port"
