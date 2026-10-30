@@ -1,17 +1,32 @@
 #!/bin/zsh
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+project_dir="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$project_dir"
+
+nginx_bin="$(command -v nginx)" || {
+  echo "Nginx is required. Install it with: brew install nginx" >&2
+  exit 1
+}
+
 .venv/bin/python manage.py migrate --noinput
 .venv/bin/python manage.py sync_library
+mkdir -p var
+command ln -shf "$(.venv/bin/python -c 'from scrollr.settings import DATA_ROOT; print(DATA_ROOT.resolve())')" var/local-media
+nginx_config="$project_dir/nginx.conf"
+"$nginx_bin" -t -c "$nginx_config" -p "$project_dir/"
 
 lan_ip="$(/usr/sbin/ipconfig getifaddr en0 2>/dev/null || /usr/sbin/ipconfig getifaddr en1 2>/dev/null || true)"
 allowed_hosts="localhost,127.0.0.1${lan_ip:+,$lan_ip}"
-if [[ -n "$lan_ip" ]]; then
-  echo "Open Scrollr on this network at http://$lan_ip:8000"
-else
-  echo "Could not detect the Mac's LAN IP; Scrollr is still available at http://127.0.0.1:8000"
-fi
+echo "Open Scrollr at http://127.0.0.1:8000${lan_ip:+ or http://$lan_ip:8000}"
 
 (sleep 1 && open http://127.0.0.1:8000) >/dev/null 2>&1 &
-exec env ALLOWED_HOSTS="$allowed_hosts" .venv/bin/python manage.py runserver 0.0.0.0:8000
+env ALLOWED_HOSTS="$allowed_hosts" .venv/bin/python -m gunicorn \
+  scrollr.wsgi:application --workers 1 --bind 127.0.0.1:8001 &
+backend_pid=$!
+cleanup() {
+  kill "$backend_pid" 2>/dev/null || true
+  "$nginx_bin" -s quit -c "$nginx_config" -p "$project_dir/" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+"$nginx_bin" -g 'daemon off;' -c "$nginx_config" -p "$project_dir/"

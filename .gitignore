@@ -6,6 +6,10 @@ __pycache__/
 # Local database and collected static files
 *.sqlite3
 /var/static/*
+/var/local-media
+/var/nginx-access.log
+/var/nginx.pid
+/var/nginx-error.log
 
 # Keep the included library visible to Git; ignore additional local media files.
 /data/*

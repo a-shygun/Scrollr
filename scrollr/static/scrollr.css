@@ -302,8 +302,12 @@ html:has(.column-feed) { scroll-snap-type: y mandatory }
 
 .mosaic-feed {
   --mosaic-gap: 4px;
-  column-count: 2;
-  column-gap: var(--mosaic-gap)
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1px;
+  grid-auto-flow: row dense;
+  gap: var(--mosaic-gap);
+  align-items: start
 }
 
 main:has(.mosaic-feed) {
@@ -321,6 +325,11 @@ main:has(.mosaic-feed) {
   break-inside: avoid;
   border: 1px solid #292a30;
   background: #111216;
+}
+
+.mosaic-feed .clip-card {
+  display: block;
+  margin: 0
 }
 
 .video-frame {
@@ -570,7 +579,7 @@ footer {
 
   .mosaic-feed {
     --mosaic-gap: 6px;
-    column-count: 4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   main:has(.mosaic-feed) {

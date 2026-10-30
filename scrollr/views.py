@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import FileResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
@@ -23,7 +23,7 @@ def index(request):
     if query:
         posts = posts.filter(Q(title__icontains=query) | Q(category__icontains=query))
 
-    page_obj = Paginator(posts, 24).get_page(request.GET.get("page"))
+    page_obj = Paginator(posts, 50).get_page(request.GET.get("page"))
     bundled = (settings.BASE_DIR / "data").resolve()
     return render(request, "scrollr/index.html", {
         "page_obj": page_obj,
@@ -36,10 +36,6 @@ def index(request):
         "can_delete_posts": settings.DATA_ROOT.resolve() != bundled,
         "page_range": page_obj.paginator.get_elided_page_range(page_obj.number),
     })
-
-
-def serve_media(request, path):
-    return FileResponse((settings.DATA_ROOT / path).open("rb"))
 
 
 @require_POST

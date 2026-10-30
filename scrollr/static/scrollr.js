@@ -5,6 +5,7 @@
   let layout = localStorage.getItem("scrollr-layout") || "mosaic";
   if (layout === "single") layout = "column";
   let videoObserver;
+  let masonryObserver;
 
   const postForm = (form, body = new FormData(form)) => fetch(form.action, {
     method: "POST",
@@ -31,6 +32,21 @@
       } else target.pause();
     }), { threshold: [0, 0.35, 0.65, 0.9] });
     feed.querySelectorAll("video").forEach(video => videoObserver.observe(video));
+
+    masonryObserver?.disconnect();
+    if (layout !== "mosaic") return;
+    const cards = feed.querySelectorAll(".clip-card");
+    const packCards = () => {
+      const style = getComputedStyle(feed);
+      const row = parseFloat(style.gridAutoRows);
+      const gap = parseFloat(style.rowGap);
+      cards.forEach(card => {
+        card.style.gridRowEnd = `span ${Math.ceil((card.offsetHeight + gap) / (row + gap))}`;
+      });
+    };
+    masonryObserver = new ResizeObserver(packCards);
+    cards.forEach(card => masonryObserver.observe(card));
+    packCards();
   }
 
   document.querySelectorAll("[data-layout]").forEach(button => button.addEventListener("click", () => updateLayout(button.dataset.layout)));

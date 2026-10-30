@@ -1,6 +1,6 @@
 # Scrollr
 
-Scrollr is a local photo and video viewer. Set `DATA_ROOT` in `scrollr/settings.py` to your media folder. On startup, it adds new media files to the database; existing records are left unchanged. Files in subfolders use the first folder name as their category.
+Scrollr is a local photo and video viewer. Set `DATA_ROOT` in the project `.env` file to your media folder. On startup, it adds new media files to the database; existing records are left unchanged. Files in subfolders use the first folder name as their category.
 
 ## Run locally
 
@@ -13,10 +13,11 @@ DATA_ROOT=/absolute/path/to/your/media
 Then run:
 
 ```sh
+brew install nginx
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ./bin/scrollr
 ```
 
-The app opens at <http://127.0.0.1:8000>. Run `python manage.py sync_library` after adding media so new files are added to the database. Favorites are stored locally in SQLite. Render's `DATA_ROOT` points to the bundled `/app/data` folder.
+Nginx serves the media and static files; Gunicorn runs Django behind it. The app opens at <http://127.0.0.1:8000>. Run `python manage.py sync_library` after adding media so new files are added to the database. Favorites are stored locally in SQLite.
