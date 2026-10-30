@@ -1,8 +1,0 @@
-<form class="vote-form" method="post" action="{% url 'vote' item.id %}">
-  {% csrf_token %}
-  <input type="hidden" name="choice" value="{{ choice }}" />
-  <input type="hidden" name="return_to" value="{{ return_url }}" />
-  <button type="submit" class="vote-action{% if item.vote_choice == choice %} is-active{% endif %}" data-vote="{{ choice }}" aria-label="{{ choice|title }} post" aria-pressed="{% if item.vote_choice == choice %}true{% else %}false{% endif %}">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="{% if choice == 'like' %}M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3Zm0 0 4-7a3 3 0 0 1 2 3v4h5a2 2 0 0 1 2 2l-1.3 6a2 2 0 0 1-2 2H7{% else %}M7 14V4H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3Zm0 0 4 7a3 3 0 0 0 2-3v-4h5a2 2 0 0 0 2-2l-1.3-6a2 2 0 0 0-2-2H7{% endif %}" /></svg>
-  </button>
-</form>

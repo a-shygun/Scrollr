@@ -3,7 +3,6 @@
   font: 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: #d8d8dc;
   background: #08090b;
-  --text: #d8d8dc;
   --muted: #9b9ba3;
   --line: #34353a;
   --panel: #141519;
@@ -91,10 +90,6 @@ button {
   scrollbar-width: none;
 }
 
-.feed-controls::-webkit-scrollbar {
-  display: none
-}
-
 .view-switch,
 .header-actions {
   display: flex;
@@ -105,8 +100,7 @@ button {
 
 .view-switch button,
 .category-wrap,
-.search-launch,
-.library-launch {
+.search-launch {
   display: grid;
   flex: 0 0 34px;
   width: 34px;
@@ -116,18 +110,17 @@ button {
   place-items: center;
   padding: 0;
   border: 1px solid #383a42;
-  border-radius: 10px;
+  border-radius: 0;
   background: #17181d;
   color: #d8d8dc;
 }
 
 .view-switch button,
-.search-launch,
-.library-launch {
+.search-launch {
   cursor: pointer
 }
 
-.view-switch button[aria-pressed="true"] {
+.view-switch button.is-active {
   border-color: #686b76;
   background: #303137;
   color: #fff;
@@ -135,33 +128,36 @@ button {
 
 .view-switch button:hover,
 .category-wrap:hover,
-.search-launch:hover,
-.apply-filters:hover {
+.search-launch:hover {
   border-color: #686b76;
   background-color: #25262c
 }
 
-.view-switch button svg,
-.category-wrap>svg,
-.search-launch svg {
+.icon {
+  display: block;
   width: 18px;
   height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
+  background: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+
+.icon-column { mask-image: url("icons/column.svg"); -webkit-mask-image: url("icons/column.svg") }
+.icon-mosaic { mask-image: url("icons/mosaic.svg"); -webkit-mask-image: url("icons/mosaic.svg") }
+.icon-folder { mask-image: url("icons/folder.svg"); -webkit-mask-image: url("icons/folder.svg") }
+.icon-search { mask-image: url("icons/search.svg"); -webkit-mask-image: url("icons/search.svg") }
+.icon-favorite { mask-image: url("icons/favorite.svg"); -webkit-mask-image: url("icons/favorite.svg") }
+.icon-delete { mask-image: url("icons/delete.svg"); -webkit-mask-image: url("icons/delete.svg") }
+
+.post-action .icon {
+  width: clamp(14px, 6cqw, 19px);
+  height: clamp(14px, 6cqw, 19px);
 }
 
 .category-wrap {
   position: relative;
   flex: 0 0 34px;
   cursor: pointer;
-}
-
-.category-wrap .filter-label,
-.category-wrap::after {
-  display: none
 }
 
 .category-wrap select {
@@ -175,25 +171,8 @@ button {
   cursor: pointer;
 }
 
-.apply-filters {
-  flex: none;
-  min-height: 36px;
-  padding: 0 9px;
-  border: 1px solid #383a42;
-  border-radius: 8px;
-  background: #17181d;
-  color: #dedee3;
-  font-size: 10px;
-  cursor: pointer;
-}
-
 .header-actions {
   margin-left: auto
-}
-
-.library-launch {
-  font-size: 23px;
-  line-height: 1
 }
 
 .search-dialog {
@@ -277,29 +256,6 @@ button {
   cursor: pointer;
 }
 
-.library-dialog>form>p {
-  margin: 0 0 14px;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5
-}
-
-.library-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px
-}
-
-.library-dialog-actions button {
-  padding: 8px 11px;
-  border: 1px solid #393c42;
-  border-radius: 7px;
-  background: #1b1c21;
-  color: #ddd;
-  font-size: 10px;
-  cursor: pointer
-}
-
 main {
   width: min(100% - 20px, 1320px);
   margin: auto
@@ -334,10 +290,6 @@ h1 {
   font-size: 12px
 }
 
-.feed {
-  min-height: 1px
-}
-
 .column-feed {
   display: flex;
   flex-direction: column;
@@ -349,8 +301,9 @@ html:has(.column-feed) { scroll-snap-type: y mandatory }
 .column-feed .clip-card { margin: 0; scroll-snap-align: center; scroll-snap-stop: always }
 
 .mosaic-feed {
+  --mosaic-gap: 4px;
   column-count: 2;
-  column-gap: 4px
+  column-gap: var(--mosaic-gap)
 }
 
 main:has(.mosaic-feed) {
@@ -362,7 +315,8 @@ main:has(.mosaic-feed) {
   position: relative;
   display: inline-block;
   width: 100%;
-  margin: 0 0 4px;
+  margin: 0 0 var(--mosaic-gap, 4px);
+  vertical-align: top;
   overflow: hidden;
   break-inside: avoid;
   border: 1px solid #292a30;
@@ -404,7 +358,7 @@ main:has(.mosaic-feed) {
   align-items: baseline;
   gap: 8px;
   padding: 22px 10px 12px;
-  background: linear-gradient(transparent, #000b);
+  background: none;
   color: #fff;
   text-align: left;
   pointer-events: none;
@@ -419,7 +373,7 @@ main:has(.mosaic-feed) {
 
 .card-caption strong {
   color: #fff;
-  font-size: 12px
+  font-size: 11px
 }
 
 .card-caption span {
@@ -427,7 +381,7 @@ main:has(.mosaic-feed) {
   font-size: 9px
 }
 
-.card-votes {
+.post-actions {
   position: absolute;
   z-index: 6;
   top: 10px;
@@ -438,7 +392,34 @@ main:has(.mosaic-feed) {
   transition: opacity .15s ease;
 }
 
-.vote-form {
+.delete-undo-state {
+  display: flex;
+  min-height: 48px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #111216;
+  color: #eee;
+  text-align: center;
+}
+
+.delete-undo-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.delete-undo-button {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #202127;
+  color: #fff;
+  cursor: pointer;
+}
+
+.post-action-form {
   display: flex;
   gap: 5px;
   margin: 0;
@@ -447,11 +428,7 @@ main:has(.mosaic-feed) {
   background: transparent
 }
 
-.vote-form input[type="hidden"] {
-  display: none
-}
-
-.vote-action {
+.post-action {
   display: grid;
   width: clamp(30px, 13cqw, 40px);
   aspect-ratio: 1;
@@ -466,40 +443,25 @@ main:has(.mosaic-feed) {
   transition: opacity .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 }
 
-.clip-card:hover .card-votes .vote-action,
-.clip-card:focus-within .card-votes .vote-action,
-.card-votes .vote-action.is-active {
+.clip-card:hover .post-actions .post-action,
+.clip-card:focus-within .post-actions .post-action,
+.post-actions .post-action.is-active {
   opacity: 1;
 }
 
-.vote-action svg {
-  width: clamp(14px, 6cqw, 19px);
-  height: clamp(14px, 6cqw, 19px);
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8
-}
-
-.vote-action[data-vote="dislike"] {
-  color: #ffb2be
-}
-
-.card-votes .vote-action[data-vote="like"].is-active {
-  border-color: #a8ffc4;
-  background: #35c96c;
-  color: #06210f;
-  box-shadow: 0 0 0 2px #35c96c66, 0 0 16px #35c96c80;
-  transform: scale(1.08);
-}
-
-.card-votes .vote-action[data-vote="dislike"].is-active {
+.post-action.favorite-action.is-active {
   border-color: #ffc0cb;
   background: #e85d75;
   color: #fff8fa;
   box-shadow: 0 0 0 2px #e85d7566, 0 0 16px #e85d7580;
   transform: scale(1.08);
+}
+
+.post-action.delete-action:hover,
+.post-action.delete-action:focus-visible {
+  border-color: #ffc0cb;
+  color: #ffc0cb;
+  opacity: 1;
 }
 
 .pagination {
@@ -540,31 +502,6 @@ main:has(.mosaic-feed) {
   font-size: 12px
 }
 
-.flash-messages .scrollr-toast {
-  position: fixed;
-  z-index: 60;
-  bottom: 24px;
-  left: 50%;
-  padding: 11px 16px;
-  transform: translateX(-50%);
-  border: 1px solid #42444b;
-  background: #1c1d22;
-  color: #fff;
-  font-size: 12px;
-  box-shadow: 0 8px 30px #0008;
-  transition: opacity 250ms ease, transform 250ms ease;
-}
-
-.flash-messages .scrollr-toast.is-dismissing {
-  opacity: 0;
-  transform: translate(-50%, 8px)
-}
-
-.flash-messages .error {
-  border-color: #8a4b58;
-  color: #ffd3dc
-}
-
 footer {
   padding: 26px 0 calc(38px + env(safe-area-inset-bottom));
   color: #888;
@@ -573,7 +510,7 @@ footer {
 }
 
 @media (hover: none) {
-  .card-votes .vote-action {
+  .post-actions .post-action {
     opacity: .55;
   }
 }
@@ -614,8 +551,7 @@ footer {
 
   .view-switch button,
   .category-wrap,
-  .search-launch,
-  .library-launch {
+  .search-launch {
     flex-basis: 38px;
     width: 38px;
     min-width: 38px;
@@ -628,21 +564,13 @@ footer {
     place-items: center
   }
 
-  .apply-filters {
-    min-height: 38px
-  }
-
   .header-actions {
     gap: 8px
   }
 
   .mosaic-feed {
+    --mosaic-gap: 6px;
     column-count: 4;
-    column-gap: 6px
-  }
-
-  .mosaic-feed .clip-card {
-    margin-bottom: 6px
   }
 
   main:has(.mosaic-feed) {
@@ -673,8 +601,7 @@ footer {
 
   .view-switch button,
   .category-wrap,
-  .search-launch,
-  .library-launch {
+  .search-launch {
     flex-basis: 32px;
     width: 32px;
     min-width: 32px;
@@ -682,10 +609,6 @@ footer {
     min-height: 34px
   }
 
-  .apply-filters {
-    min-height: 34px;
-    padding: 0 7px
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

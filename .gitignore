@@ -7,9 +7,6 @@ __pycache__/
 *.sqlite3
 /var/static/*
 
-# Django migrations are intentionally not stored in this repository.
-/scrollr/migrations/
-
 # Keep the included library visible to Git; ignore additional local media files.
 /data/*
 !/data/.gitkeep
@@ -31,6 +28,4 @@ __pycache__/
 # Local settings and macOS files
 .env
 .env.*
-.library_path
-.library_path.tmp
 .DS_Store

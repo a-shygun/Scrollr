@@ -1,24 +1,14 @@
 from django.db import models
+from urllib.parse import quote
 
 
-class Media(models.Model):
+class Post(models.Model):
     path = models.CharField(max_length=1024, unique=True)
-    title = models.CharField(max_length=512)
-    category = models.CharField(max_length=255, db_index=True)
+    title = models.CharField(max_length=512, blank=True, default="")
+    category = models.CharField(max_length=255, blank=True, default="General", db_index=True)
     is_vid = models.BooleanField(default=False)
-    vote_choice = models.CharField(
-        max_length=7,
-        choices=[("like", "Like"), ("dislike", "Dislike")],
-        blank=True,
-        null=True,
-        db_index=True,
-    )
-
-    class Meta:
-        ordering = ["category", "title", "path"]
-        verbose_name_plural = "media"
+    is_favorite = models.BooleanField(default=False, db_index=True)
 
     @property
     def url(self):
-        return f"/media/{self.id}/"
-
+        return f"/media/{quote(self.path, safe='/')}"

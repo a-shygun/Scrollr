@@ -1,38 +1,17 @@
 #!/bin/zsh
 set -e
 
-project_dir="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$project_dir" || exit 1
+cd "$(dirname "$0")/.."
+.venv/bin/python manage.py migrate --noinput
+.venv/bin/python manage.py sync_library
 
 lan_ip="$(/usr/sbin/ipconfig getifaddr en0 2>/dev/null || /usr/sbin/ipconfig getifaddr en1 2>/dev/null || true)"
-port="$(.venv/bin/python -c '
-import socket
-import sys
-
-start_port = int(sys.argv[1])
-for port in range(start_port, 65536):
-    with socket.socket() as server:
-        try:
-            server.bind(("0.0.0.0", port))
-        except OSError:
-            continue
-        print(port)
-        break
-else:
-    raise SystemExit(f"No available port at or above {start_port}")
-' "${PORT:-8080}")"
-
-env DJANGO_DEBUG=true .venv/bin/python manage.py initialize_database
-env DJANGO_DEBUG=true .venv/bin/python manage.py sync_library
-
-allowed_hosts="${ALLOWED_HOSTS:-localhost,127.0.0.1}"
+allowed_hosts="localhost,127.0.0.1${lan_ip:+,$lan_ip}"
 if [[ -n "$lan_ip" ]]; then
-  allowed_hosts="$allowed_hosts,$lan_ip"
-  echo "Starting Scrollr at http://127.0.0.1:$port and http://$lan_ip:$port"
+  echo "Open Scrollr on this network at http://$lan_ip:8000"
 else
-  echo "Starting Scrollr at http://127.0.0.1:$port"
-  echo "Could not determine a LAN IP address."
+  echo "Could not detect the Mac's LAN IP; Scrollr is still available at http://127.0.0.1:8000"
 fi
-(sleep 1 && open "http://127.0.0.1:$port") >/dev/null 2>&1 &
-exec env DJANGO_DEBUG=true ALLOWED_HOSTS="$allowed_hosts" .venv/bin/python -m gunicorn \
-  scrollr.wsgi:application --workers 1 --bind "0.0.0.0:$port"
+
+(sleep 1 && open http://127.0.0.1:8000) >/dev/null 2>&1 &
+exec env ALLOWED_HOSTS="$allowed_hosts" .venv/bin/python manage.py runserver 0.0.0.0:8000

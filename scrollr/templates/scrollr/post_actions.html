@@ -1,0 +1,20 @@
+<div class="post-actions">
+  <form class="post-action-form favorite-form" method="post" action="{% url 'favorite' item.path %}">
+    {% csrf_token %}
+    <button type="submit"
+      class="post-action favorite-action{% if item.is_favorite %} is-active{% endif %}"
+      title="{% if item.is_favorite %}
+        Remove from favorites
+      {% else %}
+        Add to favorites
+      {% endif %}">
+      <span class="icon icon-favorite"></span>
+    </button>
+  </form>
+  {% if can_delete_posts %}
+    <form class="post-action-form delete-form" method="post" action="{% url 'delete_post' item.path %}">
+      {% csrf_token %}
+      <button type="submit" class="post-action delete-action" title="Delete post and file"><span class="icon icon-delete"></span></button>
+    </form>
+  {% endif %}
+</div>

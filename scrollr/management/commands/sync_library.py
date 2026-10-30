@@ -1,47 +1,35 @@
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 
-from scrollr.models import Media
-from scrollr.views import get_library_root
+from scrollr.models import Post
 
-
-VIDEO_EXTENSIONS = (".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi")
-PHOTO_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
-SUPPORTED_EXTENSIONS = VIDEO_EXTENSIONS + PHOTO_EXTENSIONS + (".gif",)
+VIDEO_EXTENSIONS = {".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi"}
+MEDIA_EXTENSIONS = VIDEO_EXTENSIONS | {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
 class Command(BaseCommand):
-    help = "Update the media index from the active library folder."
+    help = "Add media files from DATA_ROOT that are not in the database yet."
 
     def handle(self, *args, **options):
-        media_folder = get_library_root()
-        if not media_folder.exists():
-            self.stdout.write(f"The media folder was not found: {media_folder}")
-            return
+        root = settings.DATA_ROOT.resolve()
+        if not root.is_dir():
+            raise CommandError(f"Media folder not found: {root}")
 
-        found_paths = []
-        for file_path in media_folder.rglob("*"):
-            if not file_path.is_file():
+        added = 0
+        for file in root.rglob("*"):
+            if not file.is_file() or file.suffix.lower() not in MEDIA_EXTENSIONS:
                 continue
 
-            extension = file_path.suffix.lower()
-            if extension not in SUPPORTED_EXTENSIONS:
-                continue
-
-            relative_path = file_path.relative_to(media_folder).as_posix()
-            relative_category = file_path.parent.relative_to(media_folder)
-            category = relative_category.parts[0] if relative_category.parts else "General"
-            found_paths.append(relative_path)
-            Media.objects.update_or_create(
-                path=relative_path,
+            relative = file.relative_to(root).as_posix()
+            parts = file.relative_to(root).parts
+            _, created = Post.objects.get_or_create(
+                path=relative,
                 defaults={
-                    "title": file_path.stem[:512],
-                    "category": category[:255],
-                    "is_vid": extension in VIDEO_EXTENSIONS,
+                    "title": file.stem,
+                    "category": parts[0] if len(parts) > 1 else "General",
+                    "is_vid": file.suffix.lower() in VIDEO_EXTENSIONS,
                 },
             )
+            added += created
 
-        if found_paths:
-            Media.objects.exclude(path__in=found_paths).delete()
-        else:
-            Media.objects.all().delete()
-        self.stdout.write(f"Synced {len(found_paths)} media files from {media_folder}.")
+        self.stdout.write(f"Added {added} media files from {root}.")

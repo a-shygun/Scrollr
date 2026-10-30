@@ -12,7 +12,7 @@
       <p class="result-count">{{ page_obj.paginator.count }} posts</p>
     </section>
 
-    <section id="feed-root" class="feed mosaic-feed" data-vote-filter="{{ selected_vote }}" data-next-page="{% if page_obj.has_next %}?category={{ selected_category_slug }}&amp;vote={{ selected_vote }}&amp;q={{ query|urlencode }}&amp;page={{ page_obj.next_page_number }}{% endif %}" aria-label="Media">
+    <section id="feed-root" class="feed mosaic-feed" data-favorite-filter="{{ selected_category }}">
       {% for item in page_obj %}
         {% include 'scrollr/media_card.html' with item=item %}
       {% endfor %}
@@ -28,5 +28,4 @@
     {% if page_obj.paginator.num_pages > 1 %}{% include 'scrollr/pagination.html' %}{% endif %}
     <footer>Your personal media library.</footer>
   </main>
-
 {% endblock %}

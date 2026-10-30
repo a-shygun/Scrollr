@@ -1,22 +1,12 @@
-from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path
-
-from scrollr.views import cast_vote, index, media_file, set_library_path
+from scrollr.views import delete_media, index, serve_media, toggle_favorite
 
 
 urlpatterns = [
     path("", index, name="index"),
-    path("all/", index, {"category": "all"}, name="all_categories"),
-    path("vote/<int:media_id>/", cast_vote, name="vote"),
-    path("media/<int:media_id>/", media_file, name="media_file"),
+    path("media/<path:path>", serve_media, name="media"),
+    path("favorite/<path:path>/", toggle_favorite, name="favorite"),
+    path("delete/<path:path>/", delete_media, name="delete_post"),
 ]
-
-if settings.DEBUG:
-    urlpatterns.append(path("local-library/", set_library_path, name="set_library_path"))
-    urlpatterns += staticfiles_urlpatterns()
-
-urlpatterns += [
-    path("<slug:category>/", index, name="category"),
-    path("<slug:category>/<slug:vote>/", index, name="category_vote"),
-]
+urlpatterns += staticfiles_urlpatterns()
