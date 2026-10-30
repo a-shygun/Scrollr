@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.static import serve
 from django.views.decorators.http import require_POST
 
 from scrollr.models import Post
@@ -36,6 +37,10 @@ def index(request):
         "can_delete_posts": settings.DATA_ROOT.resolve() != bundled,
         "page_range": page_obj.paginator.get_elided_page_range(page_obj.number),
     })
+
+
+def serve_media(request, path):
+    return serve(request, path, document_root=settings.DATA_ROOT)
 
 
 @require_POST
