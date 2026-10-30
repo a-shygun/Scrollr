@@ -1,8 +1,10 @@
 services:
   - type: web
     name: scrollr
-    runtime: docker
+    runtime: python
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py migrate --noinput && python manage.py sync_library && gunicorn scrollr.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DJANGO_DEBUG
         value: "false"
@@ -11,4 +13,4 @@ services:
       - key: ALLOWED_HOSTS
         value: .onrender.com,scrollr.amirshygun.ir,localhost,127.0.0.1
       - key: DATA_ROOT
-        value: /app/data
+        value: data
