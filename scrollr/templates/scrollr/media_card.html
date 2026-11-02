@@ -1,9 +1,9 @@
 <article id="post-{{ item.id }}" class="clip-card">
   <div class="video-frame">
     {% if item.is_vid %}
-      <video src="{{ item.url }}" playsinline webkit-playsinline autoplay loop preload="auto" muted></video>
+      <video src="{{ item.url }}" playsinline webkit-playsinline autoplay loop preload="none" muted></video>
     {% else %}
-      <img src="{{ item.url }}" loading="eager" decoding="async" alt="{{ item.title }}" />
+      <img src="{{ item.url }}" loading="lazy" decoding="async" alt="{{ item.title }}" />
     {% endif %}
     <div class="card-caption">
       <strong>{{ item.title }}</strong>

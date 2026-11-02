@@ -13,11 +13,10 @@ DATA_ROOT=/absolute/path/to/your/media
 Then run:
 
 ```sh
-brew install nginx
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ./bin/scrollr
 ```
 
-Nginx serves the media and static files; Gunicorn runs Django behind it. The app opens at <http://127.0.0.1:8000>. Run `python manage.py sync_library` after adding media so new files are added to the database. Favorites are stored locally in SQLite.
+Django's development server serves the app, media, and static files at <http://127.0.0.1:8000>. Run `python manage.py sync_library` after adding media so new files are added to the database. Favorites are stored locally in SQLite.

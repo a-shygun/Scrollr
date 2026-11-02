@@ -6,6 +6,7 @@
 
   <nav class="nav-tools">
     <form class="feed-controls" method="get" action="{% url 'index' %}">
+      {% csrf_token %}
       <input type="hidden" name="q" value="{{ query }}" />
       <div class="view-switch">
         <button type="button" data-layout="column" title="Column view"><span class="icon icon-column"></span></button>
@@ -20,6 +21,7 @@
           {% endfor %}
         </select>
       </label>
+      <button class="shuffle-button" type="submit" formmethod="post" formaction="{% url 'shuffle_posts' %}" title="Shuffle post order" aria-label="Shuffle post order">⤨</button>
 
     </form>
     <div class="header-actions">

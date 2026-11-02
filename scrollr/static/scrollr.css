@@ -100,6 +100,7 @@ button {
 
 .view-switch button,
 .category-wrap,
+.shuffle-button,
 .search-launch {
   display: grid;
   flex: 0 0 34px;
@@ -116,6 +117,7 @@ button {
 }
 
 .view-switch button,
+.shuffle-button,
 .search-launch {
   cursor: pointer
 }
@@ -128,6 +130,7 @@ button {
 
 .view-switch button:hover,
 .category-wrap:hover,
+.shuffle-button:hover,
 .search-launch:hover {
   border-color: #686b76;
   background-color: #25262c
@@ -159,6 +162,8 @@ button {
   flex: 0 0 34px;
   cursor: pointer;
 }
+
+.shuffle-button { cursor: pointer; font-size: 20px; }
 
 .category-wrap select {
   position: absolute;
@@ -396,10 +401,15 @@ main:has(.mosaic-feed) {
   top: 10px;
   right: 10px;
   display: flex;
+  flex-direction: row;
+  align-items: flex-end;
   gap: clamp(3px, 1.5cqw, 6px);
   pointer-events: auto;
   transition: opacity .15s ease;
 }
+
+.post-action-form.favorite-form { order: 2; }
+.post-action-form.delete-form { order: 1; }
 
 .delete-undo-state {
   display: flex;
@@ -439,17 +449,21 @@ main:has(.mosaic-feed) {
 
 .post-action {
   display: grid;
-  width: clamp(30px, 13cqw, 40px);
-  aspect-ratio: 1;
+  width: clamp(50px, 21cqw, 68px);
+  aspect-ratio: 1.5 / 1;
   place-items: center;
   padding: 0;
   border: 1px solid #ffffff45;
-  border-radius: 50%;
+  border-radius: 0;
   background: #111216a6;
   color: #fff;
   opacity: .45;
   cursor: pointer;
   transition: opacity .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.post-action-form.delete-form {
+  position: static;
 }
 
 .clip-card:hover .post-actions .post-action,

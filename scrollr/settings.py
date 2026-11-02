@@ -7,14 +7,16 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = "scrollr-local-key"
 DEBUG = True
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = ["django.contrib.staticfiles", "scrollr"]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
 ]
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 ROOT_URLCONF = "scrollr.urls"
 WSGI_APPLICATION = "scrollr.wsgi.application"
 TEMPLATES = [

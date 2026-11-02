@@ -28,8 +28,12 @@
     videoObserver = new IntersectionObserver(entries => entries.forEach(({ target, isIntersecting, intersectionRatio }) => {
       if (isIntersecting && intersectionRatio >= 0.35) {
         target.muted = true;
+        if (target.preload === "none") target.preload = "metadata";
         target.play().catch(() => { });
-      } else target.pause();
+      } else {
+        target.pause();
+        target.preload = "none";
+      }
     }), { threshold: [0, 0.35, 0.65, 0.9] });
     feed.querySelectorAll("video").forEach(video => videoObserver.observe(video));
 
@@ -52,6 +56,9 @@
   document.querySelectorAll("[data-layout]").forEach(button => button.addEventListener("click", () => updateLayout(button.dataset.layout)));
   document.querySelector('.feed-controls select[name="category"]')?.addEventListener("change", event => {
     event.currentTarget.form.requestSubmit();
+  });
+  document.querySelector(".shuffle-button")?.addEventListener("click", event => {
+    event.currentTarget.form.method = "post";
   });
 
   feed.addEventListener("submit", async event => {
