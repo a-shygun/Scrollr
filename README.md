@@ -20,3 +20,5 @@ python -m pip install -r requirements.txt
 ```
 
 Django's development server serves the app, media, and static files at <http://127.0.0.1:8000>. Run `python manage.py sync_library` after adding media so new files are added to the database. Favorites are stored locally in SQLite.
+
+Video descriptions are indexed from a sibling `<video-name>.info.json` file with a `description` field (as written by yt-dlp), or from a sibling `<video-name>.description` text file. Run `python manage.py sync_library` to update descriptions and make them searchable.

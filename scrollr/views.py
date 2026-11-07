@@ -24,7 +24,11 @@ def index(request):
     elif selected:
         posts = posts.filter(category=selected)
     if query:
-        posts = posts.filter(Q(title__icontains=query) | Q(category__icontains=query))
+        posts = posts.filter(
+            Q(title__icontains=query)
+            | Q(category__icontains=query)
+            | Q(description__icontains=query, is_vid=True)
+        )
 
     shuffle_seed = request.session.get("shuffle_seed")
     if shuffle_seed is not None:
